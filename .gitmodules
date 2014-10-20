@@ -1,0 +1,6 @@
+[submodule "PyCryptsy"]
+	path = PyCryptsy
+	url = https://github.com/salfter/PyCryptsy
+[submodule "python-bittrex"]
+	path = python-bittrex
+	url = https://github.com/ericsomdahl/python-bittrex
