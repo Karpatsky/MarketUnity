@@ -6,11 +6,14 @@ import pprint
 import time
 import pprint
 import texttable
-
+import sys
 
 creds=json.loads(open("credentials.json").read())
 coins=json.loads(open("coins.json").read())
 u=MarketUnity(creds, coins)
+#pprint.pprint(u.exchanges)
+#sys.exit()
+
 u.update_prices()
 coins=u.find_best()
 

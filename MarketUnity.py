@@ -28,6 +28,8 @@ sys.path.insert(0, './PyCryptsy/')
 from PyCryptsy import PyCryptsy
 sys.path.insert(0, './python-bittrex/bittrex/')
 from bittrex import Bittrex
+sys.path.insert(0, './PyCoinsE/')
+from PyCoinsE import PyCoinsE
 import time
 from decimal import *
 
@@ -48,6 +50,9 @@ class MarketUnity:
         processed=True
       if (exch=="bittrex"):
         self.exchanges[exch]["connection"]=Bittrex(str(self.credentials[exch]["pubkey"]), str(self.credentials[exch]["privkey"]))
+        processed=True
+      if (exch=="coins-e"):
+        self.exchanges[exch]["connection"]=PyCoinsE(str(self.credentials[exch]["pubkey"]), str(self.credentials[exch]["privkey"]))
         processed=True
       if (processed==False):
         raise ValueError("unknown exchange")
@@ -84,6 +89,12 @@ class MarketUnity:
             if (market["BaseCurrency"].upper()=="BTC" and self.check_coin_id(market["MarketCurrency"].upper())):
               markets[market["MarketCurrency"].upper()]={}
               markets[market["MarketCurrency"].upper()]["id"]=market["MarketName"]
+        if (exch=="coins-e"):
+          cm=conn.unauthenticated_request("markets/list")["markets"]
+          for j, market in enumerate(cm):
+            if (market["c2"].upper()=="BTC" and self.check_coin_id(market["c1"].upper())):
+              markets[market["c1"].upper()]={}
+              markets[market["c1"].upper()]["id"]=market["pair"]
     self.last_market_update=time.time()
       
   # update prices
@@ -97,11 +108,11 @@ class MarketUnity:
           try:
             self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(orders["buyorders"][0]["buyprice"]).quantize(Decimal("1.00000000"))
           except:
-            self.exchanges[exch]["markets"][mkt]["bid"]=0
+            self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(0).quantize(Decimal("1.00000000"))
           try:
             self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(orders["sellorders"][0]["sellprice"]).quantize(Decimal("1.00000000"))
           except:
-            self.exchanges[exch]["markets"][mkt]["ask"]=0
+            self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(0).quantize(Decimal("1.00000000"))
       if (exch=="bittrex"):
         summ=conn.get_market_summaries()["result"]
         mkts={}
@@ -110,8 +121,19 @@ class MarketUnity:
         for j, mkt in enumerate(self.exchanges[exch]["markets"]):
           self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["Bid"]).quantize(Decimal("1.00000000"))
           self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["Ask"]).quantize(Decimal("1.00000000"))
+      if (exch=="coins-e"):
+        for j, mkt in enumerate(self.exchanges[exch]["markets"]):
+          orders=conn.unauthenticated_request("market/"+self.exchanges[exch]["markets"][mkt]["id"]+"/depth")["marketdepth"]        
+          try:
+            self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(orders["bids"][0]["r"]).quantize(Decimal("1.00000000"))
+          except:
+            self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(0).quantize(Decimal("1.00000000"))
+          try:
+            self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(orders["asks"][0]["r"]).quantize(Decimal("1.00000000"))
+          except:
+            self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(0).quantize(Decimal("1.00000000"))
 
-  # find best bid/ask
+  # find best bid[B/ask
   
   def find_best(self):
     coins={}

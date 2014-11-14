@@ -4,3 +4,6 @@
 [submodule "python-bittrex"]
 	path = python-bittrex
 	url = https://github.com/ericsomdahl/python-bittrex
+[submodule "PyCoinsE"]
+	path = PyCoinsE
+	url = https://github.com/salfter/PyCoinsE
