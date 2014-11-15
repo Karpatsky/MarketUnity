@@ -11,10 +11,11 @@ import sys
 creds=json.loads(open("credentials.json").read())
 coins=json.loads(open("coins.json").read())
 u=MarketUnity(creds, coins)
+
+u.update_prices()
 #pprint.pprint(u.exchanges)
 #sys.exit()
 
-u.update_prices()
 coins=u.find_best()
 
 tbl=texttable.Texttable()

@@ -107,12 +107,22 @@ class MarketUnity:
           orders=conn.Query("marketorders", {"marketid": self.exchanges[exch]["markets"][mkt]["id"]})["return"]
           try:
             self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(orders["buyorders"][0]["buyprice"]).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(0).quantize(Decimal("1.00000000"))
+            for k in range(0, len(orders["buyorders"])):
+              self.exchanges[exch]["markets"][mkt]["vol"]+=Decimal(orders["buyorders"][k]["total"]).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["bid_cnt"]=len(orders["buyorders"])
           except:
             self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(0).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(0).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["bid_cnt"]=0
           try:
             self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(orders["sellorders"][0]["sellprice"]).quantize(Decimal("1.00000000"))
+            for k in range(0, len(orders["sellorders"])):
+              self.exchanges[exch]["markets"][mkt]["vol"]+=Decimal(orders["sellorders"][k]["total"]).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["ask_cnt"]=len(orders["sellorders"])
           except:
             self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(0).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["ask_cnt"]=0
       if (exch=="bittrex"):
         summ=conn.get_market_summaries()["result"]
         mkts={}
@@ -120,20 +130,33 @@ class MarketUnity:
           mkts[mkt["MarketName"]]=mkt
         for j, mkt in enumerate(self.exchanges[exch]["markets"]):
           self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["Bid"]).quantize(Decimal("1.00000000"))
+          self.exchanges[exch]["markets"][mkt]["bid_cnt"]=mkts[self.exchanges[exch]["markets"][mkt]["id"]]["OpenBuyOrders"]
           self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["Ask"]).quantize(Decimal("1.00000000"))
+          self.exchanges[exch]["markets"][mkt]["ask_cnt"]=mkts[self.exchanges[exch]["markets"][mkt]["id"]]["OpenSellOrders"]
+          self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["BaseVolume"]).quantize(Decimal("1.00000000"))
       if (exch=="coins-e"):
         for j, mkt in enumerate(self.exchanges[exch]["markets"]):
           orders=conn.unauthenticated_request("market/"+self.exchanges[exch]["markets"][mkt]["id"]+"/depth")["marketdepth"]        
           try:
             self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(orders["bids"][0]["r"]).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(0).quantize(Decimal("1.00000000"))
+            for k in range(0, len(orders["bids"])):
+              self.exchanges[exch]["markets"][mkt]["vol"]+=(Decimal(orders["bids"][k]["n"])*Decimal(orders["bids"][k]["q"])*Decimal(orders["bids"][k]["r"])).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["bid_cnt"]=len(orders["bids"])
           except:
             self.exchanges[exch]["markets"][mkt]["bid"]=Decimal(0).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(0).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["bid_cnt"]=0
           try:
             self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(orders["asks"][0]["r"]).quantize(Decimal("1.00000000"))
+            for k in range(0, len(orders["asks"])):
+              self.exchanges[exch]["markets"][mkt]["vol"]+=(Decimal(orders["asks"][k]["n"])*Decimal(orders["asks"][k]["q"])*Decimal(orders["asks"][k]["r"])).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["ask_cnt"]=len(orders["asks"])
           except:
             self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(0).quantize(Decimal("1.00000000"))
+            self.exchanges[exch]["markets"][mkt]["ask_cnt"]=0
 
-  # find best bid[B/ask
+  # find best bid/ask
   
   def find_best(self):
     coins={}
