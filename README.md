@@ -2,9 +2,11 @@ MarketUnity
 ===========
 
 MarketUnity aims to provide a unified interface for cryptocurrency markets.
-At this time, the included example (test.py) will scan all configured
-markets to find the highest bid and lowest ask for the coins you request,
-and will dump a table to stdout.
+
+Two examples are included.  all_coins.py will scan all configured markets to
+find the highest bid and lowest ask for the coins you request, and will dump
+a table to stdout.  one_coin.py will look up one coin at all markets and
+dump all available figures for that coin to stdout.
 
 MarketUnity presently supports three exchanges:
 

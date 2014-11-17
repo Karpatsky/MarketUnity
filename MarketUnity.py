@@ -133,7 +133,10 @@ class MarketUnity:
           self.exchanges[exch]["markets"][mkt]["bid_cnt"]=mkts[self.exchanges[exch]["markets"][mkt]["id"]]["OpenBuyOrders"]
           self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["Ask"]).quantize(Decimal("1.00000000"))
           self.exchanges[exch]["markets"][mkt]["ask_cnt"]=mkts[self.exchanges[exch]["markets"][mkt]["id"]]["OpenSellOrders"]
-          self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["BaseVolume"]).quantize(Decimal("1.00000000"))
+          try:
+            self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(mkts[self.exchanges[exch]["markets"][mkt]["id"]]["BaseVolume"]).quantize(Decimal("1.00000000"))
+          except:
+            self.exchanges[exch]["markets"][mkt]["vol"]=Decimal(0).quantize(Decimal("1.00000000"))
       if (exch=="coins-e"):
         for j, mkt in enumerate(self.exchanges[exch]["markets"]):
           orders=conn.unauthenticated_request("market/"+self.exchanges[exch]["markets"][mkt]["id"]+"/depth")["marketdepth"]        
