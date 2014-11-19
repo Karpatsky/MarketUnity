@@ -78,23 +78,29 @@ class MarketUnity:
         markets=self.exchanges[exch]["markets"]
         conn=self.exchanges[exch]["connection"]
         if (exch=="cryptsy"):
+          coindata=conn.Query("getcoindata", {})["return"]
           cm=conn.Query("getmarkets", {})["return"]
           for j, market in enumerate(cm):
             if (market["secondary_currency_code"].upper()=="BTC" and self.check_coin_id(market["primary_currency_code"].upper())):
               markets[market["primary_currency_code"].upper()]={}
               markets[market["primary_currency_code"].upper()]["id"]=int(market["marketid"])
+              for k in range(0, len(coindata)):
+                if (coindata[k]["code"].upper()==market["primary_currency_code"].upper()):
+                  markets[market["primary_currency_code"].upper()]["healthy"]=(int(coindata[k]["maintenancemode"])==0)
         if (exch=="bittrex"):
           cm=conn.get_markets()["result"]
           for j, market in enumerate(cm):
             if (market["BaseCurrency"].upper()=="BTC" and self.check_coin_id(market["MarketCurrency"].upper())):
               markets[market["MarketCurrency"].upper()]={}
               markets[market["MarketCurrency"].upper()]["id"]=market["MarketName"]
+              markets[market["MarketCurrency"].upper()]["healthy"]=market["IsActive"]
         if (exch=="coins-e"):
           cm=conn.unauthenticated_request("markets/list")["markets"]
           for j, market in enumerate(cm):
             if (market["c2"].upper()=="BTC" and self.check_coin_id(market["c1"].upper())):
               markets[market["c1"].upper()]={}
               markets[market["c1"].upper()]["id"]=market["pair"]
+              markets[market["c1"].upper()]["healthy"]=(market["status"]=="healthy")
     self.last_market_update=time.time()
       
   # update prices
@@ -166,17 +172,18 @@ class MarketUnity:
     for i, ex in enumerate(self.exchanges):
       for j, cn in enumerate(self.exchanges[ex]["markets"]):
         try:
-          if (coins[cn]["ask"]>self.exchanges[ex]["markets"][cn]["ask"]):
+          if (coins[cn]["ask"]>self.exchanges[ex]["markets"][cn]["ask"] and self.exchanges[ex]["markets"][cn]["healthy"]):
             coins[cn]["ask"]=self.exchanges[ex]["markets"][cn]["ask"]
             coins[cn]["ask_exch"]=ex
-          if (coins[cn]["bid"]<self.exchanges[ex]["markets"][cn]["bid"]):
+          if (coins[cn]["bid"]<self.exchanges[ex]["markets"][cn]["bid"] and self.exchanges[ex]["markets"][cn]["healthy"]):
             coins[cn]["bid"]=self.exchanges[ex]["markets"][cn]["bid"]
             coins[cn]["bid_exch"]=ex
         except:
-          coins[cn]={}
-          coins[cn]["ask"]=self.exchanges[ex]["markets"][cn]["ask"]
-          coins[cn]["ask_exch"]=ex
-          coins[cn]["bid"]=self.exchanges[ex]["markets"][cn]["bid"]
-          coins[cn]["bid_exch"]=ex
+          if (self.exchanges[ex]["markets"][cn]["healthy"]):
+            coins[cn]={}
+            coins[cn]["ask"]=self.exchanges[ex]["markets"][cn]["ask"]
+            coins[cn]["ask_exch"]=ex
+            coins[cn]["bid"]=self.exchanges[ex]["markets"][cn]["bid"]
+            coins[cn]["bid_exch"]=ex
     return coins
 
