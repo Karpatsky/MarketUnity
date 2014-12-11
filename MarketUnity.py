@@ -34,7 +34,6 @@ sys.path.insert(0, './PyCCEX/')
 from PyCCEX import PyCCEX
 import time
 from decimal import *
-import pprint
 
 class MarketUnity:
 
@@ -110,7 +109,7 @@ class MarketUnity:
         if (exch=="c-cex"):
           cm=conn.Query("pairs", {})["pairs"]
           for j, pair in enumerate(cm):
-            if (pair.split("-")[1].upper()=="BTC"):
+            if (pair.split("-")[1].upper()=="BTC" and self.check_coin_id(pair.split("-")[0].upper())):
               markets[pair.split("-")[0].upper()]={}
               markets[pair.split("-")[0].upper()]["id"]=pair
               markets[pair.split("-")[0].upper()]["healthy"]=True
