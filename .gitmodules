@@ -7,3 +7,6 @@
 [submodule "PyCoinsE"]
 	path = PyCoinsE
 	url = https://github.com/salfter/PyCoinsE
+[submodule "PyCCEX"]
+	path = PyCCEX
+	url = https://github.com/salfter/PyCCEX

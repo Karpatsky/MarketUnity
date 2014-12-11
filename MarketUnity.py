@@ -30,8 +30,11 @@ sys.path.insert(0, './python-bittrex/bittrex/')
 from bittrex import Bittrex
 sys.path.insert(0, './PyCoinsE/')
 from PyCoinsE import PyCoinsE
+sys.path.insert(0, './PyCCEX/')
+from PyCCEX import PyCCEX
 import time
 from decimal import *
+import pprint
 
 class MarketUnity:
 
@@ -53,6 +56,9 @@ class MarketUnity:
         processed=True
       if (exch=="coins-e"):
         self.exchanges[exch]["connection"]=PyCoinsE(str(self.credentials[exch]["pubkey"]), str(self.credentials[exch]["privkey"]))
+        processed=True
+      if (exch=="c-cex"):
+        self.exchanges[exch]["connection"]=PyCCEX(str(self.credentials[exch]["key"]))
         processed=True
       if (processed==False):
         raise ValueError("unknown exchange")
@@ -101,6 +107,13 @@ class MarketUnity:
               markets[market["c1"].upper()]={}
               markets[market["c1"].upper()]["id"]=market["pair"]
               markets[market["c1"].upper()]["healthy"]=(market["status"]=="healthy")
+        if (exch=="c-cex"):
+          cm=conn.Query("pairs", {})["pairs"]
+          for j, pair in enumerate(cm):
+            if (pair.split("-")[1].upper()=="BTC"):
+              markets[pair.split("-")[0].upper()]={}
+              markets[pair.split("-")[0].upper()]["id"]=pair
+              markets[pair.split("-")[0].upper()]["healthy"]=True
     self.last_market_update=time.time()
       
   # update prices
@@ -164,6 +177,29 @@ class MarketUnity:
           except:
             self.exchanges[exch]["markets"][mkt]["ask"]=Decimal(0).quantize(Decimal("1.00000000"))
             self.exchanges[exch]["markets"][mkt]["ask_cnt"]=0
+      if (exch=="c-cex"):
+        for j, mkt in enumerate(self.exchanges[exch]["markets"]):
+          orders=conn.Query("orderlist", {"pair": self.exchanges[exch]["markets"][mkt]["id"]})["return"]
+          bid=Decimal("0.00000000")
+          bid_cnt=0
+          ask=Decimal("0.00000000")
+          ask_cnt=0
+          vol=Decimal("0.00000000")
+          for k, order in enumerate(orders):
+            if (orders[order]["type"]=="buy"):
+              if (bid==Decimal("0.00000000") or orders[order]["price"]>bid):
+                bid=Decimal(orders[order]["price"]).quantize(Decimal("1.00000000"))
+              bid_cnt+=1
+            if (orders[order]["type"]=="sell"):
+              if (ask==Decimal("0.00000000") or orders[order]["price"]<ask):
+                ask=Decimal(orders[order]["price"]).quantize(Decimal("1.00000000"))
+              ask_cnt+=1
+            vol+=Decimal(orders[order]["amount"]).quantize(Decimal("1.00000000"))*Decimal(orders[order]["price"]).quantize(Decimal("1.00000000"))
+          self.exchanges[exch]["markets"][mkt]["bid"]=bid
+          self.exchanges[exch]["markets"][mkt]["bid_cnt"]=bid_cnt
+          self.exchanges[exch]["markets"][mkt]["ask"]=ask
+          self.exchanges[exch]["markets"][mkt]["ask_cnt"]=ask_cnt
+          self.exchanges[exch]["markets"][mkt]["vol"]=vol
 
   # find best bid/ask
   
